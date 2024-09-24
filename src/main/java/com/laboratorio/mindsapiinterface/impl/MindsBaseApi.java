@@ -16,6 +16,7 @@ import com.laboratorio.mindsapiinterface.utils.InstruccionInfo;
 import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
 import com.laboratorio.mindsapiinterface.utils.MindsSessionManager;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +25,7 @@ import org.apache.logging.log4j.Logger;
  * @author Rafael
  * @version 1.0
  * @created 18/09/2024
- * @updated 19/09/2024
+ * @updated 24/09/2024
  */
 public class MindsBaseApi {
     protected static final Logger log = LogManager.getLogger(MindsBaseApi.class);
@@ -88,7 +89,7 @@ public class MindsBaseApi {
     }
     
     // Función que obtiene los seguidores de una cuenta
-    protected MindsAccountListResponse getSubscribersList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) throws Exception {
+    protected MindsEntityListResponse getAccountList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) throws Exception {
         List<MindsAccount> accounts = null;
         boolean continuar = true;
         int limit = instruccionInfo.getLimit();
@@ -126,12 +127,54 @@ public class MindsBaseApi {
                     }
                 }
             } while (continuar);
+            
+            List<MindsEntity> entities = accounts.stream()
+                    .map(ac -> new MindsEntity(ac.getGuid(), ac.getGuid(), Long.parseLong(ac.getTime_created()), ac.getUrn(), null))
+                    .collect(Collectors.toList());
 
             if (quantity == 0) {
-                return new MindsAccountListResponse("success", accounts, max_id);
+                return new MindsEntityListResponse("success", entities, max_id);
             }
             
-            return new MindsAccountListResponse("success", accounts.subList(0, Math.min(quantity, accounts.size())), max_id);
+            return new MindsEntityListResponse("success", entities.subList(0, Math.min(quantity, entities.size())), max_id);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+    
+    private MindsAccountListResponse getEntitiesDetails(MindsEntityListResponse entityListResponse) throws Exception {
+        // Se obtiene el máximo de elementos a tratar por ciclo
+        int maxLimit = Integer.parseInt(this.apiConfig.getProperty("getUsersDetail_max_limit"));
+        List<MindsEntity> list = entityListResponse.getEntities();
+        int totalSize = list.size();
+
+        List<MindsAccount> accounts = null;
+        for (int i = 0; i < totalSize; i += maxLimit) {
+            // Obtener el índice final del bloque
+            int endIndex = Math.min(i + maxLimit, totalSize);
+            List<MindsEntity> sublist = list.subList(i, endIndex);
+
+            // Procesar el bloque actual
+            MindsUsersDetailResponse usersDetailResponse = this.getUsersDetail(sublist);
+            if (!usersDetailResponse.getStatus().equals("success")) {
+                throw new MindsApiException(MindsBaseApi.class.getName(), "Error, consultando los detalles de una lista de entidades. Respuesta inesperada.");
+            }
+
+            if (accounts == null) {
+                accounts = usersDetailResponse.getEntities();
+            } else {
+                accounts.addAll(usersDetailResponse.getEntities());
+            }
+            log.debug("getSubscriptionsList. Recuperados: " + usersDetailResponse.getEntities().size() + ". Total: " + accounts.size());
+        }
+        
+        return new MindsAccountListResponse("success", accounts, entityListResponse.getLoadNext());
+    }
+    
+    protected MindsAccountListResponse getSubscribersList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) throws Exception {
+        try {
+            MindsEntityListResponse entityListResponse = this.getAccountList(instruccionInfo, userId, quantity, posicionInicial);
+            return this.getEntitiesDetails(entityListResponse);
         } catch (Exception e) {
             throw e;
         }
@@ -162,6 +205,7 @@ public class MindsBaseApi {
             }
             ApiRequest request = new ApiRequest(endpoint, okStatus);
             request.addApiPathParam("urns", urns.toString());
+            request.addApiPathParam("export_user_counts", "true");
             request = this.addContentHeader(request);
             
             String jsonStr = this.client.executeGetRequest(request);
@@ -237,33 +281,7 @@ public class MindsBaseApi {
     protected MindsAccountListResponse getSubscriptionsList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) throws Exception {
         try {
             MindsEntityListResponse entityListResponse = this.getEntityList(instruccionInfo, userId, quantity, posicionInicial);
-            
-            // Se obtiene el máximo de elementos a tratar por ciclo
-            int maxLimit = Integer.parseInt(this.apiConfig.getProperty("getUsersDetail_max_limit"));
-            List<MindsEntity> list = entityListResponse.getEntities();
-            int totalSize = list.size();
- 
-            List<MindsAccount> accounts = null;
-            for (int i = 0; i < totalSize; i += maxLimit) {
-                // Obtener el índice final del bloque
-                int endIndex = Math.min(i + maxLimit, totalSize);
-                List<MindsEntity> sublist = list.subList(i, endIndex);
-
-                // Procesar el bloque actual
-                MindsUsersDetailResponse usersDetailResponse = this.getUsersDetail(sublist);
-                if (!usersDetailResponse.getStatus().equals("success")) {
-                    throw new MindsApiException(MindsBaseApi.class.getName(), "Error, consultando los detalles de una lista de entidades. Respuesta inesperada.");
-                }
-                
-                if (accounts == null) {
-                    accounts = usersDetailResponse.getEntities();
-                } else {
-                    accounts.addAll(usersDetailResponse.getEntities());
-                }
-                log.debug("getSubscriptionsList. Cantidad: " + quantity + ". Recuperados: " + usersDetailResponse.getEntities().size() + ". Total: " + accounts.size());
-            }
-            
-            return new MindsAccountListResponse("success", accounts, entityListResponse.getLoadNext());
+            return this.getEntitiesDetails(entityListResponse);
         } catch (Exception e) {
             throw e;
         }
