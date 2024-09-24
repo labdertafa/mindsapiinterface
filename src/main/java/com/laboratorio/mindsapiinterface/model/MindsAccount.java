@@ -90,7 +90,6 @@ public class MindsAccount {
     private String source;
     private String canonical_url;
     private MindsAvatarUrl avatar_url;
-    private List<MindsCarousel> carousels;
     private boolean blocked;
     private boolean blocked_by;
     
