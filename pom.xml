@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.laboratorio</groupId>
     <artifactId>mindsapiinterface</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <packaging>jar</packaging>
     <name>Minds-Api-Interface</name>
     <description>Librería que ejecuta las API de la red social Minds</description>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.laboratorio</groupId>
             <artifactId>clientapilibrary</artifactId>
-            <version>1.0.11</version>
+            <version>1.0.12</version>
         </dependency>
         
         <dependency>
