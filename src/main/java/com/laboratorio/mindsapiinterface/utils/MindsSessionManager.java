@@ -1,5 +1,6 @@
 package com.laboratorio.mindsapiinterface.utils;
 
+import com.laboratorio.clientapilibrary.model.ApiResponse;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.model.MindsSession;
 import java.io.FileInputStream;
@@ -7,17 +8,15 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  *
  * @author Rafael
- * @version 1.0
+ * @version 1.1
  * @created 19/09/2024
- * @updated 19/09/2024
+ * @updated 06/10/2024
  */
 public class MindsSessionManager {
     protected static final Logger log = LogManager.getLogger(MindsSessionManager.class);
@@ -35,20 +34,17 @@ public class MindsSessionManager {
         return cookieValue.substring(pos1 + 1, pos2);
     }
     
-    public static MindsSession getSessionData(String xVersion, Response response) {
-        // Obtener todos los headers
-        MultivaluedMap<String, Object> headers = response.getHeaders();
-        
+    public static MindsSession getSessionData(String xVersion, ApiResponse response) {
         // Procesar todos los headers "Set-Cookie"
-        List<Object> setCookies = headers.get("Set-Cookie");
+        List<String> setCookies = response.getHttpHeaders().get("Set-Cookie");
+        log.info("Número de cookies encontradas: " + setCookies.size());
         if (setCookies == null) {
             throw new MindsApiException(MindsSessionManager.class.getName(), "No se encontraron las cookies esperadas en la respuesta HTTP");
         }
 
         StringBuilder cookies = null;
         String token = null;
-        for (Object cookieHeader : setCookies) {
-            String cookieValue = cookieHeader.toString();
+        for (String cookieValue : setCookies) {
             log.debug("He encontrado este valor Set-Cookie: " + cookieValue);
             
             if (cookieValue.contains("XSRF-TOKEN=")) {

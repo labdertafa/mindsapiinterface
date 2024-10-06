@@ -1,7 +1,9 @@
 package com.laboratorio.mindsapiinterface.impl;
 
 import com.google.gson.JsonSyntaxException;
+import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
+import com.laboratorio.clientapilibrary.model.ApiResponse;
 import com.laboratorio.mindsapiinterface.MindsNotificationApi;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.model.MindsNotification;
@@ -12,9 +14,9 @@ import java.util.stream.Collectors;
 /**
  *
  * @author Rafael
- * @version 1.0
+ * @version 1.1
  * @created 23/09/2024
- * @updated 23/09/2024
+ * @updated 06/10/2024
  */
 public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotificationApi {
     public MindsNotificationApiImpl() throws Exception {
@@ -33,21 +35,21 @@ public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotif
     // Función que devuelve una página de notificaciones de una cuenta
     private MindsNotificationsResponse getNotificationPage(String uri, int limit, int okStatus, String posicionInicial) throws Exception {
         try {
-            ApiRequest request = new ApiRequest(uri, okStatus);
+            ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.GET);
             request.addApiPathParam("limit", Integer.toString(limit));
             request.addApiPathParam("offset", posicionInicial);
             
             request = this.addContentHeader(request);
             request = this.addSessionHeader(request);
             
-            String jsonStr = this.client.executeGetRequest(request);
+            ApiResponse response = this.client.executeApiRequest(request);
             
-            MindsNotificationsResponse response = this.gson.fromJson(jsonStr, MindsNotificationsResponse.class);
-            if (!response.getStatus().equals("success")) {
+            MindsNotificationsResponse notificationsResponse = this.gson.fromJson(response.getResponseStr(), MindsNotificationsResponse.class);
+            if (!notificationsResponse.getStatus().equals("success")) {
                 throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error recuperando una página de notificaciones");
             }
             
-            return response;
+            return notificationsResponse;
         } catch (JsonSyntaxException e) {
             logException(e);
             throw e;

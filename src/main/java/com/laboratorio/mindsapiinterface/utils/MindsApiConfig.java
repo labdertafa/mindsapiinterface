@@ -26,7 +26,7 @@ public class MindsApiConfig {
         try {
             this.properties.load(new FileReader("config//minds_api.properties"));
         } catch (Exception e) {
-            log.error("Ha ocurrido un error leyendo el fichero de configuración del API de Truth Social. Finaliza la aplicación!");
+            log.error("Ha ocurrido un error leyendo el fichero de configuración del API de Parler. Finaliza la aplicación!");
             log.error(String.format("Error: %s", e.getMessage()));
             if (e.getCause() != null) {
                 log.error(String.format("Causa: %s", e.getCause().getMessage()));

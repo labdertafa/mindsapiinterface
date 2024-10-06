@@ -3,8 +3,9 @@ package com.laboratorio.mindsapiinterface.impl;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.laboratorio.clientapilibrary.ApiClient;
-import com.laboratorio.clientapilibrary.impl.ApiClientImpl;
+import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
+import com.laboratorio.clientapilibrary.model.ApiResponse;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.model.MindsAccount;
 import com.laboratorio.mindsapiinterface.model.MindsEntity;
@@ -23,9 +24,9 @@ import org.apache.logging.log4j.Logger;
 /**
  *
  * @author Rafael
- * @version 1.0
+ * @version 1.1
  * @created 18/09/2024
- * @updated 24/09/2024
+ * @updated 06/10/2024
  */
 public class MindsBaseApi {
     protected static final Logger log = LogManager.getLogger(MindsBaseApi.class);
@@ -42,7 +43,7 @@ public class MindsBaseApi {
         this.apiConfig = MindsApiConfig.getInstance();
         String sessionFilePath = this.apiConfig.getProperty("minds_session_file");
         this.session = MindsSessionManager.loadSession(sessionFilePath);
-        this.client = new ApiClientImpl();
+        this.client = new ApiClient();
         this.gson = new Gson();
     }
     
@@ -72,14 +73,16 @@ public class MindsBaseApi {
     // Función que devuelve una página de seguidores o seguidos de una cuenta
     private String getAccountPage(String uri, int okStatus, int limit, String posicionInicial) throws Exception {
         try {
-            ApiRequest request = new ApiRequest(uri, okStatus);
+            ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.GET);
             request.addApiPathParam("limit", Integer.toString(limit));
             if (posicionInicial != null) {
                 request.addApiPathParam("from_timestamp", posicionInicial);
             }
             request = this.addContentHeader(request);
             
-            return this.client.executeGetRequest(request);
+            ApiResponse response = this.client.executeApiRequest(request);
+            
+            return response.getResponseStr();
         } catch (JsonSyntaxException e) {
             logException(e);
             throw e;
@@ -190,7 +193,7 @@ public class MindsBaseApi {
             throw new MindsApiException(MindsBaseApi.class.getName(), "Error, se está pidiendo los detalles de demasiados urns: " + maxLimit);
         }
         if (entities.isEmpty()) {
-            throw new MindsApiException(MindsBaseApi.class.getName(), "Error, noy ahy ningún usuario al cual consultar el detalle");
+            throw new MindsApiException(MindsBaseApi.class.getName(), "Error, no hay ningún usuario al cual consultar el detalle");
         }
         
         try {
@@ -203,14 +206,14 @@ public class MindsBaseApi {
                     urns.append(entity.getUrn());
                 }
             }
-            ApiRequest request = new ApiRequest(endpoint, okStatus);
+            ApiRequest request = new ApiRequest(endpoint, okStatus, ApiMethodType.GET);
             request.addApiPathParam("urns", urns.toString());
             request.addApiPathParam("export_user_counts", "true");
             request = this.addContentHeader(request);
             
-            String jsonStr = this.client.executeGetRequest(request);
+            ApiResponse response = this.client.executeApiRequest(request);
             
-            return this.gson.fromJson(jsonStr, MindsUsersDetailResponse.class);
+            return this.gson.fromJson(response.getResponseStr(), MindsUsersDetailResponse.class);
         } catch (JsonSyntaxException e) {
             logException(e);
             throw e;

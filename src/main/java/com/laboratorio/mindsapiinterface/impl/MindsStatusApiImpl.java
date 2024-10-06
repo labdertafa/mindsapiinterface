@@ -1,7 +1,9 @@
 package com.laboratorio.mindsapiinterface.impl;
 
 import com.google.gson.JsonSyntaxException;
+import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
+import com.laboratorio.clientapilibrary.model.ApiResponse;
 import com.laboratorio.mindsapiinterface.MindsStatusApi;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.model.request.MindsPostRequest;
@@ -13,7 +15,7 @@ import com.laboratorio.mindsapiinterface.model.response.MindsUploadFileResponse;
  * @author Rafael
  * @version 1.0
  * @created 20/09/2024
- * @updated 23/09/2024
+ * @updated 06/10/2024
  */
 public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     public MindsStatusApiImpl() throws Exception {
@@ -29,15 +31,15 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             String requestJson = this.gson.toJson(postRequest);
             
             String uri = endpoint;
-            ApiRequest request = new ApiRequest(uri, okStatus, requestJson);
+            ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.PUT, requestJson);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
             request.addApiHeader("Origin", "https://www.minds.com");
             request.addApiHeader("Referer", "https://www.minds.com");
             
-            String jsonStr = this.client.executePutRequest(request);
+            ApiResponse response = this.client.executeApiRequest(request);
             
-            return this.gson.fromJson(jsonStr, MindsPostResponse.class);
+            return this.gson.fromJson(response.getResponseStr(), MindsPostResponse.class);
         } catch (JsonSyntaxException e) {
             logException(e);
             throw e;
@@ -52,7 +54,6 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
         int okStatus = Integer.parseInt(this.apiConfig.getProperty("postStatus_ok_status"));
         
         try {
-            
             MindsPostRequest postRequest;
             if (filePath == null) {
                 postRequest = new MindsPostRequest(text);
@@ -63,15 +64,15 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             String requestJson = this.gson.toJson(postRequest);
             
             String uri = endpoint;
-            ApiRequest request = new ApiRequest(uri, okStatus, requestJson);
+            ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.PUT, requestJson);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
             request.addApiHeader("Origin", "https://www.minds.com");
             request.addApiHeader("Referer", "https://www.minds.com");
             
-            String jsonStr = this.client.executePutRequest(request);
+            ApiResponse response = this.client.executeApiRequest(request);
             
-            return this.gson.fromJson(jsonStr, MindsPostResponse.class);
+            return this.gson.fromJson(response.getResponseStr(), MindsPostResponse.class);
         } catch (JsonSyntaxException e) {
             logException(e);
             throw e;
@@ -87,7 +88,7 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
         
         try {
             String uri = endpoint;
-            ApiRequest request = new ApiRequest(uri, okStatus);
+            ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.POST);
             request = this.addSessionHeader(request);
             request.addApiHeader("Accept", "application/json, text/plain, */*");
             request.addApiHeader("Accept-Encoding", "gzip, deflate, br, zstd");
@@ -96,16 +97,16 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiHeader("Referer", "https://www.minds.com/newsfeed/subscriptions/for-you");
             request.addFileFormData("file", filePath);
             
-            String jsonStr = this.client.executePostMultipartForm(request);
+            ApiResponse response = this.client.executeApiRequest(request);
             
-            MindsUploadFileResponse response = this.gson.fromJson(jsonStr, MindsUploadFileResponse.class);
+            MindsUploadFileResponse uploadFileResponse = this.gson.fromJson(response.getResponseStr(), MindsUploadFileResponse.class);
             
-            if (!response.getStatus().equals("success")) {
-                log.error("Error: " + jsonStr);
+            if (!uploadFileResponse.getStatus().equals("success")) {
+                log.error("Error: " + response.getResponseStr());
                 throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error subiendo un archivo al servidor Minds: " + filePath);
             }
             
-            return response;
+            return uploadFileResponse;
         } catch (JsonSyntaxException e) {
             logException(e);
             throw e;
@@ -113,5 +114,25 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             throw new MindsApiException(MindsStatusApiImpl.class.getName(), e.getMessage());
         }
     }
-    
+
+    @Override
+    public boolean deleteStatus(String id) {
+        String endpoint = this.apiConfig.getProperty("deleteStatus_endpoint");
+        int okStatus = Integer.parseInt(this.apiConfig.getProperty("deleteStatus_ok_status"));
+        
+        try {
+            String uri = endpoint + "/" + id;
+            ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.DELETE);
+            request = this.addSessionHeader(request);
+            request = this.addContentHeader(request);
+            request.addApiHeader("Origin", "https://www.minds.com");
+            request.addApiHeader("Referer", "https://www.minds.com");
+            
+            this.client.executeApiRequest(request);
+            
+            return true;
+        } catch (Exception e) {
+            throw new MindsApiException(MindsStatusApiImpl.class.getName(), e.getMessage());
+        }
+    }
 }
