@@ -1,7 +1,6 @@
-package com.laboratorio.mindsapiinterface.model.response;
+package com.laboratorio.mindsapiinterface.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.laboratorio.mindsapiinterface.model.MindsAccount;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +11,11 @@ import lombok.Setter;
  * @author Rafael
  * @version 1.0
  * @created 20/09/2024
- * @updated 23/09/2024
+ * @updated 07/10/2024
  */
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class MindsPostResponse {
+public class MindsStatus {
     private String guid;
     private String type;
     private String time_created;
@@ -29,9 +28,7 @@ public class MindsPostResponse {
     private boolean perma_url;
     private String message;
     private MindsAccount ownerObj;
-    private boolean containerObj;
     private boolean thumbnail_src;
-    private boolean remind_object;
     private boolean entity_guid;
     private boolean featured;
     private boolean featured_guid;
@@ -62,4 +59,9 @@ public class MindsPostResponse {
     private boolean allow_comments;
     private String license;
     private int quotes;
+
+    @Override
+    public String toString() {
+        return "MindsStatus{" + "guid=" + guid + ", type=" + type + ", time_created=" + time_created + ", time_updated=" + time_updated + ", owner_guid=" + owner_guid + ", title=" + title + ", message=" + message + ", urn=" + urn + ", impressions=" + impressions + '}';
+    }
 }

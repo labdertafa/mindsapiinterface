@@ -2,8 +2,11 @@ package com.laboratorio.api;
 
 import com.laboratorio.mindsapiinterface.MindsStatusApi;
 import com.laboratorio.mindsapiinterface.impl.MindsStatusApiImpl;
-import com.laboratorio.mindsapiinterface.model.response.MindsPostResponse;
-import com.laboratorio.mindsapiinterface.model.response.MindsUploadFileResponse;
+import com.laboratorio.mindsapiinterface.model.MindsStatus;
+import com.laboratorio.mindsapiinterface.model.response.MindsUserActivityResponse;
+import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +20,12 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author Rafael
  * @version 1.0
  * @created 20/09/2024
- * @updated 06/10/2024
+ * @updated 07/10/2024
  */
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MindsStatusApiTest {
+    protected static final Logger log = LogManager.getLogger(MindsStatusApiTest.class);
     private static MindsStatusApi statusApi;
     private static String postId;
     
@@ -35,7 +39,7 @@ public class MindsStatusApiTest {
         String text = "Hola, les saludo desde El laboratorio de Rafa. Post automático #SiguemeYTeSigo";
         String owner = "1676194796068147207";
         
-        MindsPostResponse status = statusApi.postStatus(text);
+        MindsStatus status = statusApi.postStatus(text);
         postId = status.getGuid();
 
         assertTrue(!status.getGuid().isEmpty());
@@ -64,7 +68,7 @@ public class MindsStatusApiTest {
         String text = "Hola, les saludo desde El laboratorio de Rafa. Post automático #SiguemeYTeSigo";
         String owner = "1676194796068147207";
         
-        MindsPostResponse status = statusApi.postStatus(text, imagen);
+        MindsStatus status = statusApi.postStatus(text, imagen);
         postId = status.getGuid();
         
         assertTrue(!status.getGuid().isEmpty());
@@ -76,5 +80,29 @@ public class MindsStatusApiTest {
         boolean result = statusApi.deleteStatus(postId);
         
         assertTrue(result);
+    }
+    
+    @Test
+    public void getUserActivity() {
+        String userId = "903289035852619779";
+        int limit = 5;
+        
+        MindsUserActivityResponse response = statusApi.getUserActivity(userId, limit);
+        
+        assertTrue(response.getEntities().size() >= 5);
+    }
+    
+    @Test
+    public void getGlobalTimeline() {
+        int quantity = 50;
+        
+        List<MindsStatus> statuses = statusApi.getGlobalTimeline(quantity);
+        int i = 0;
+        for (MindsStatus status : statuses) {
+            log.info(i + "-) Status: " + status.toString());
+            i++;
+        }
+        
+        assertEquals(quantity, statuses.size());
     }
 }
