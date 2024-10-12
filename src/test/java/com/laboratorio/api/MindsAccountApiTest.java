@@ -19,7 +19,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author Rafael
  * @version 1.0
  * @created 18/09/2024
- * @updated 24/09/2024
+ * @updated 12/10/2024
  */
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -29,6 +29,17 @@ public class MindsAccountApiTest {
     @BeforeEach
     public void initTest() throws Exception {
         accountApi = new MindsAccountApiImpl();
+    }
+    
+    @Test
+    public void getAccountsById() throws Exception {
+        String id = "urn:user:903289035852619779";
+        List<String> usersId = List.of(id);
+        
+        List<MindsAccount> accounts = accountApi.getAccountsById(usersId);
+        
+        assertEquals(1, accounts.size());
+        assertEquals("903289035852619779", accounts.get(0).getGuid());
     }
     
     @Test

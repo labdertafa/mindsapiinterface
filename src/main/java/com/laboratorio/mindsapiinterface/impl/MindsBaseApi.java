@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
  * @author Rafael
  * @version 1.1
  * @created 18/09/2024
- * @updated 06/10/2024
+ * @updated 12/10/2024
  */
 public class MindsBaseApi {
     protected static final Logger log = LogManager.getLogger(MindsBaseApi.class);
@@ -155,10 +155,12 @@ public class MindsBaseApi {
         for (int i = 0; i < totalSize; i += maxLimit) {
             // Obtener el índice final del bloque
             int endIndex = Math.min(i + maxLimit, totalSize);
-            List<MindsEntity> sublist = list.subList(i, endIndex);
+            List<String> usersId = list.subList(i, endIndex).stream()
+                    .map(e -> e.getUrn())
+                    .collect(Collectors.toList());
 
             // Procesar el bloque actual
-            MindsUsersDetailResponse usersDetailResponse = this.getUsersDetail(sublist);
+            MindsUsersDetailResponse usersDetailResponse = this.getUsersDetail(usersId);
             if (!usersDetailResponse.getStatus().equals("success")) {
                 throw new MindsApiException(MindsBaseApi.class.getName(), "Error, consultando los detalles de una lista de entidades. Respuesta inesperada.");
             }
@@ -184,26 +186,26 @@ public class MindsBaseApi {
     }
     
     // Función que obtiene los datos de los usuarios asociados a una lista de entidades por su URN
-    private MindsUsersDetailResponse getUsersDetail(List<MindsEntity> entities) throws Exception {
+    protected MindsUsersDetailResponse getUsersDetail(List<String> usersId) throws Exception {
         String endpoint = this.apiConfig.getProperty("getUsersDetail_endpoint");
         int okStatus = Integer.parseInt(this.apiConfig.getProperty("getUsersDetail_ok_status"));
         int maxLimit = Integer.parseInt(this.apiConfig.getProperty("getUsersDetail_max_limit"));
         
-        if (entities.size() > maxLimit) {
+        if (usersId.size() > maxLimit) {
             throw new MindsApiException(MindsBaseApi.class.getName(), "Error, se está pidiendo los detalles de demasiados urns: " + maxLimit);
         }
-        if (entities.isEmpty()) {
+        if (usersId.isEmpty()) {
             throw new MindsApiException(MindsBaseApi.class.getName(), "Error, no hay ningún usuario al cual consultar el detalle");
         }
         
         try {
             StringBuilder urns = null;
-            for (MindsEntity entity : entities) {
+            for (String userUrn : usersId) {
                 if (urns == null) {
-                    urns = new StringBuilder(entity.getUrn());
+                    urns = new StringBuilder(userUrn);
                 } else {
                     urns.append(",");
-                    urns.append(entity.getUrn());
+                    urns.append(userUrn);
                 }
             }
             ApiRequest request = new ApiRequest(endpoint, okStatus, ApiMethodType.GET);

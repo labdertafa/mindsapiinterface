@@ -11,6 +11,7 @@ import com.laboratorio.mindsapiinterface.model.response.MindsAccountListResponse
 import com.laboratorio.mindsapiinterface.model.response.MindsActionResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsGetAccountResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsSuggestionsResponse;
+import com.laboratorio.mindsapiinterface.model.response.MindsUsersDetailResponse;
 import com.laboratorio.mindsapiinterface.utils.InstruccionInfo;
 import java.util.List;
 
@@ -19,10 +20,24 @@ import java.util.List;
  * @author Rafael
  * @version 1.1
  * @created 18/09/2024
- * @updated 06/10/2024
+ * @updated 12/10/2024
  */
 public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi {
     public MindsAccountApiImpl() throws Exception {
+    }
+    
+    @Override
+    public List<MindsAccount> getAccountsById(List<String> usersId) throws Exception {
+        try {
+            MindsUsersDetailResponse mindsUsersDetailResponse = this.getUsersDetail(usersId);
+            if (!mindsUsersDetailResponse.getStatus().equals("success")) {
+                throw new MindsApiException(MindsBaseApi.class.getName(), "Error, consultando los detalles de una lista de entidades.");
+            }
+            
+            return mindsUsersDetailResponse.getEntities();
+        } catch (Exception e) {
+            throw e;
+        }
     }
     
     @Override
