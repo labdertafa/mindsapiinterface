@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @author Rafael
  * @version 1.1
  * @created 20/09/2024
- * @updated 07/10/2024
+ * @updated 13/10/2024
  */
 public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     public MindsStatusApiImpl() throws Exception {
@@ -202,9 +202,9 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     @Override
     public List<MindsStatus> getGlobalTimeline(int quantity) {
         String query = this.apiConfig.getProperty("newsFeedQuery");
-        String endpoint = this.apiConfig.getProperty("getGlobalTimeLineHeaders_endpoint");
-        int limit = Integer.parseInt(this.apiConfig.getProperty("getGlobalTimeLineHeaders_max_limit"));
-        int okStatus = Integer.parseInt(this.apiConfig.getProperty("getGlobalTimeLineHeaders_ok_status"));
+        String endpoint = this.apiConfig.getProperty("getGlobalTimeLine_endpoint");
+        int limit = Integer.parseInt(this.apiConfig.getProperty("getGlobalTimeLine_max_limit"));
+        int okStatus = Integer.parseInt(this.apiConfig.getProperty("getGlobalTimeLine_ok_status"));
         
         List<MindsStatus> statuses = null;
         boolean continuar = true;
@@ -231,7 +231,7 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
                 }
                 
                 cursor = mindsActivityResponse.getData().getNewsfeed().getPageInfo().getEndCursor();
-                log.info("getGlobalTimeLineHeaders. Recuperados: " + statuses.size() + ". Cursor: " + cursor);
+                log.info("getGlobalTimeline. Recuperados: " + statuses.size() + ". Cursor: " + cursor);
                 if (filteredResults.isEmpty()) {
                     continuar = false;
                 } else {
