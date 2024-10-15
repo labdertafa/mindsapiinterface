@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @author Rafael
  * @version 1.1
  * @created 20/09/2024
- * @updated 13/10/2024
+ * @updated 15/10/2024
  */
 public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     public MindsStatusApiImpl() throws Exception {
@@ -172,13 +172,13 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     }
     
     // Función que devuelve una página de cabeceras de estados de un timeline
-    private MindsActivityResponse getTimelinePage(String uri, int okStatus, int limit,  String query, String posicionInicial) {
+    private MindsActivityResponse getTimelinePage(String uri, int okStatus, int limit, String algorithm, String query, String posicionInicial) {
         try {
             MindsActivityRequest activityRequest;
             if (posicionInicial != null) {
-                activityRequest = new MindsActivityRequest(limit, posicionInicial, query);
+                activityRequest = new MindsActivityRequest(limit, algorithm, query, posicionInicial);
             } else {
-                activityRequest = new MindsActivityRequest(limit, query);
+                activityRequest = new MindsActivityRequest(limit, algorithm, query);
             }
             String requestJson = this.gson.toJson(activityRequest);
             
@@ -205,6 +205,7 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
         String endpoint = this.apiConfig.getProperty("getGlobalTimeLine_endpoint");
         int limit = Integer.parseInt(this.apiConfig.getProperty("getGlobalTimeLine_max_limit"));
         int okStatus = Integer.parseInt(this.apiConfig.getProperty("getGlobalTimeLine_ok_status"));
+        String algorithm = this.apiConfig.getProperty("newsFeed_Algorithm");
         
         List<MindsStatus> statuses = null;
         boolean continuar = true;
@@ -214,14 +215,14 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             String uri = endpoint;
             
             do {
-                MindsActivityResponse mindsActivityResponse = this.getTimelinePage(uri, okStatus, limit, query, cursor);
+                MindsActivityResponse mindsActivityResponse = this.getTimelinePage(uri, okStatus, limit, algorithm, query, cursor);
                 List<MindsActivityEdge> results = mindsActivityResponse.getData().getNewsfeed().getEdges();
-                log.info("Elementos recuperados total: " + results.size());
+                log.debug("Elementos recuperados total: " + results.size());
                 List<MindsStatus> filteredResults = results.stream()
                         .filter(edge -> edge.get__typename().equals("ActivityEdge"))
                         .map(edge -> this.gson.fromJson(edge.getNode().getLegacy(), MindsStatus.class))
                         .collect(Collectors.toList());
-                log.info("Elementos recuperados filtrados: " + filteredResults.size());
+                log.debug("Elementos recuperados filtrados: " + filteredResults.size());
                 
                 
                 if (statuses == null) {
@@ -231,7 +232,7 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
                 }
                 
                 cursor = mindsActivityResponse.getData().getNewsfeed().getPageInfo().getEndCursor();
-                log.info("getGlobalTimeline. Recuperados: " + statuses.size() + ". Cursor: " + cursor);
+                log.debug("getGlobalTimeline. Recuperados: " + statuses.size() + ". Cursor: " + cursor);
                 if (filteredResults.isEmpty()) {
                     continuar = false;
                 } else {
