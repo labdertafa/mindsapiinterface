@@ -9,18 +9,20 @@ import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.model.MindsAccount;
 import com.laboratorio.mindsapiinterface.model.response.MindsAccountListResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsActionResponse;
+import com.laboratorio.mindsapiinterface.model.response.MindsEntityListResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsGetAccountResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsSuggestionsResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsUsersDetailResponse;
 import com.laboratorio.mindsapiinterface.utils.InstruccionInfo;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
  * @author Rafael
- * @version 1.1
+ * @version 1.2
  * @created 18/09/2024
- * @updated 12/10/2024
+ * @updated 22/10/2024
  */
 public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi {
     public MindsAccountApiImpl() throws Exception {
@@ -94,6 +96,14 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
         InstruccionInfo instruccionInfo = new InstruccionInfo(endpoint, null, okStatus, usedLimit);
         return this.getSubscribersList(instruccionInfo, id, quantity, posicionInicial);
     }
+    
+    @Override
+    public List<String> getFollowersIds(String userId, int limit) throws Exception {
+        MindsAccountListResponse response = this.getFollowers(userId, limit);
+        return response.getUsers().stream()
+                .map(account -> account.getUrn())
+                .collect(Collectors.toList());
+    }
 
     @Override
     public MindsAccountListResponse getFollowings(String id) throws Exception {
@@ -109,9 +119,8 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
     public MindsAccountListResponse getFollowings(String id, int limit, int quantity) throws Exception {
         return this.getFollowings(id, limit, quantity, null);
     }
-
-    @Override
-    public MindsAccountListResponse getFollowings(String id, int limit, int quantity, String posicionInicial) throws Exception {
+    
+    protected InstruccionInfo getFollowingsInstruccionInfo(int limit) {
         String endpoint = this.apiConfig.getProperty("getFollowings_endpoint");
         String complementoUrl = this.apiConfig.getProperty("getFollowings_complemento_url");
         int okStatus = Integer.parseInt(this.apiConfig.getProperty("getFollowings_ok_status"));
@@ -121,8 +130,22 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
         if ((limit == 0) || (limit > maxLimit)) {
             usedLimit = defaultLimit;
         }
-        InstruccionInfo instruccionInfo = new InstruccionInfo(endpoint, complementoUrl, okStatus, usedLimit);
+        return new InstruccionInfo(endpoint, complementoUrl, okStatus, usedLimit);
+    }
+
+    @Override
+    public MindsAccountListResponse getFollowings(String id, int limit, int quantity, String posicionInicial) throws Exception {
+        InstruccionInfo instruccionInfo = getFollowingsInstruccionInfo(limit);
         return this.getSubscriptionsList(instruccionInfo, id, quantity, posicionInicial);
+    }
+    
+    @Override
+    public List<String> getFollowingsIds(String userId, int limit) throws Exception {
+        InstruccionInfo instruccionInfo = getFollowingsInstruccionInfo(limit);
+        MindsEntityListResponse response = this.getEntityList(instruccionInfo, userId, limit, null);
+        return response.getEntities().stream()
+                .map(entity -> entity.getUrn())
+                .collect(Collectors.toList());
     }
 
     @Override

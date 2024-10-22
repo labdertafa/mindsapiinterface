@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
  * @author Rafael
  * @version 1.0
  * @created 23/09/2024
- * @updated 23/09/2024
+ * @updated 22/10/2024
  */
 public class MindsNotificationApiTest {
     private MindsNotificationApi notificationApi;
@@ -24,7 +24,7 @@ public class MindsNotificationApiTest {
     
     @Test
     public void getAllNotificationsWithLimit() throws Exception { // Con limit
-        int limit = 3;
+        int limit = 10;
         
         MindsNotificationsResponse response = this.notificationApi.getAllNotifications(limit);
 

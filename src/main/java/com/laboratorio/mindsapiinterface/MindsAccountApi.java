@@ -7,9 +7,9 @@ import java.util.List;
 /**
  *
  * @author Rafael
- * @version 1.0
+ * @version 1.1
  * @created 18/09/2024
- * @updated 12/10/2024
+ * @updated 22/10/2024
  */
 public interface MindsAccountApi {
     List<MindsAccount> getAccountsById(List<String> usersId) throws Exception;
@@ -20,10 +20,14 @@ public interface MindsAccountApi {
     MindsAccountListResponse getFollowers(String id, int limit, int quantity) throws Exception;
     MindsAccountListResponse getFollowers(String id, int limit, int quantity, String posicionInicial) throws Exception;
     
+    List<String> getFollowersIds(String userId, int limit) throws Exception;
+    
     MindsAccountListResponse getFollowings(String id) throws Exception;
     MindsAccountListResponse getFollowings(String id, int limit) throws Exception;
     MindsAccountListResponse getFollowings(String id, int limit, int quantity) throws Exception;
     MindsAccountListResponse getFollowings(String id, int limit, int quantity, String posicionInicial) throws Exception;
+    
+    List<String> getFollowingsIds(String userId, int limit) throws Exception;
     
     boolean followAccount(String id);
     boolean unfollowAccount(String id);
