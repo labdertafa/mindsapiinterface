@@ -7,6 +7,8 @@ import com.laboratorio.mindsapiinterface.model.MindsAccount;
 import com.laboratorio.mindsapiinterface.model.response.MindsAccountListResponse;
 import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -17,13 +19,14 @@ import org.junit.jupiter.api.TestMethodOrder;
 /**
  *
  * @author Rafael
- * @version 1.0
+ * @version 1.1
  * @created 18/09/2024
- * @updated 12/10/2024
+ * @updated 23/10/2024
  */
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MindsAccountApiTest {
+    protected static final Logger log = LogManager.getLogger(MindsAccountApiTest.class);
     private static MindsAccountApi accountApi;
     
     @BeforeEach
@@ -106,6 +109,15 @@ public class MindsAccountApiTest {
     }
     
     @Test
+    public void getAllFollowersIds() throws Exception {
+        String id = "1676194796068147207";
+        
+        List<String> usersIds = accountApi.getFollowersIds(id, 0);
+        log.info("Elementos recuperados: " + usersIds.size());
+        assertTrue(!usersIds.isEmpty());
+    }
+    
+    @Test
     public void getFollowersInvalidId() throws Exception {
         String id = "1125349753AAABBB60";
         
@@ -158,6 +170,15 @@ public class MindsAccountApiTest {
         MindsAccountListResponse accountListResponse = accountApi.getFollowings(id);
         assertTrue(!accountListResponse.getLoadNext().isBlank());
         assertTrue(accountListResponse.getUsers().size() > 100);
+    }
+    
+    @Test
+    public void getFollowingsIds() throws Exception {
+        String id = "1676194796068147207";
+        
+        List<String> usersIds = accountApi.getFollowingsIds(id, 0);
+        log.info("Elementos recuperados: " + usersIds.size());
+        assertTrue(!usersIds.isEmpty());
     }
     
     @Test

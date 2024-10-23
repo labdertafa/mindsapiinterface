@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author Rafael
  * @version 1.2
  * @created 18/09/2024
- * @updated 22/10/2024
+ * @updated 23/10/2024
  */
 public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi {
     public MindsAccountApiImpl() throws Exception {
@@ -101,7 +101,7 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
     public List<String> getFollowersIds(String userId, int limit) throws Exception {
         MindsAccountListResponse response = this.getFollowers(userId, limit);
         return response.getUsers().stream()
-                .map(account -> account.getUrn())
+                .map(account -> account.getGuid())
                 .collect(Collectors.toList());
     }
 
@@ -142,9 +142,9 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
     @Override
     public List<String> getFollowingsIds(String userId, int limit) throws Exception {
         InstruccionInfo instruccionInfo = getFollowingsInstruccionInfo(limit);
-        MindsEntityListResponse response = this.getEntityList(instruccionInfo, userId, limit, null);
+        MindsEntityListResponse response = this.getEntityList(instruccionInfo, userId, 0, null);
         return response.getEntities().stream()
-                .map(entity -> entity.getUrn())
+                .map(entity -> entity.getGuid())
                 .collect(Collectors.toList());
     }
 
