@@ -6,6 +6,7 @@ import com.laboratorio.clientapilibrary.ApiClient;
 import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
 import com.laboratorio.clientapilibrary.model.ApiResponse;
+import com.laboratorio.clientapilibrary.utils.ReaderConfig;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.model.MindsAccount;
 import com.laboratorio.mindsapiinterface.model.MindsEntity;
@@ -14,7 +15,6 @@ import com.laboratorio.mindsapiinterface.model.response.MindsAccountListResponse
 import com.laboratorio.mindsapiinterface.model.response.MindsEntityListResponse;
 import com.laboratorio.mindsapiinterface.model.response.MindsUsersDetailResponse;
 import com.laboratorio.mindsapiinterface.utils.InstruccionInfo;
-import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
 import com.laboratorio.mindsapiinterface.utils.MindsSessionManager;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,13 +26,13 @@ import org.apache.logging.log4j.Logger;
  * @author Rafael
  * @version 1.1
  * @created 18/09/2024
- * @updated 12/10/2024
+ * @updated 09/05/2025
  */
 public class MindsBaseApi {
     protected static final Logger log = LogManager.getLogger(MindsBaseApi.class);
     protected final ApiClient client;
     protected MindsSession session;
-    protected MindsApiConfig apiConfig;
+    protected ReaderConfig apiConfig;
     protected final Gson gson;
 
     public void setSession(MindsSession session) {
@@ -40,7 +40,7 @@ public class MindsBaseApi {
     }
     
     public MindsBaseApi() throws Exception {
-        this.apiConfig = MindsApiConfig.getInstance();
+        this.apiConfig = new ReaderConfig("config//minds_api.properties");
         String sessionFilePath = this.apiConfig.getProperty("minds_session_file");
         this.session = MindsSessionManager.loadSession(sessionFilePath);
         this.client = new ApiClient();
@@ -78,6 +78,7 @@ public class MindsBaseApi {
             if (posicionInicial != null) {
                 request.addApiPathParam("from_timestamp", posicionInicial);
             }
+            request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
             
             ApiResponse response = this.client.executeApiRequest(request);
@@ -211,6 +212,7 @@ public class MindsBaseApi {
             ApiRequest request = new ApiRequest(endpoint, okStatus, ApiMethodType.GET);
             request.addApiPathParam("urns", urns.toString());
             request.addApiPathParam("export_user_counts", "true");
+            request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
             
             ApiResponse response = this.client.executeApiRequest(request);

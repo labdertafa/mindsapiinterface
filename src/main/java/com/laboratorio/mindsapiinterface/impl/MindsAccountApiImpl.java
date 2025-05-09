@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author Rafael
  * @version 1.2
  * @created 18/09/2024
- * @updated 23/10/2024
+ * @updated 09/05/2025
  */
 public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi {
     public MindsAccountApiImpl() throws Exception {
@@ -50,6 +50,7 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
         try {
             String uri = endpoint + "/" + username;
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.GET);
+            request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
             
             ApiResponse response = this.client.executeApiRequest(request);

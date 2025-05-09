@@ -1,10 +1,10 @@
 package com.laboratorio.api;
 
+import com.laboratorio.clientapilibrary.utils.ReaderConfig;
 import com.laboratorio.mindsapiinterface.MindsSessionApi;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.impl.MindsSessionApiImpl;
 import com.laboratorio.mindsapiinterface.model.MindsSession;
-import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,15 +14,15 @@ import org.junit.jupiter.api.BeforeEach;
  * @author Rafael
  * @version 1.0
  * @created 19/09/2024
- * @updated 19/09/2024
+ * @updated 09/05/2025
  */
 public class MindsSessionApiTest {
-    private static MindsApiConfig config;
+    private static ReaderConfig config;
     private static MindsSessionApi sessionApi;
     
     @BeforeEach
     public void initTest() throws Exception {
-        config = MindsApiConfig.getInstance();
+        config = new ReaderConfig("config//minds_api.properties");
         sessionApi = new MindsSessionApiImpl();
     }
     

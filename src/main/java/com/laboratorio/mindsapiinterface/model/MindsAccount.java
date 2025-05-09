@@ -1,6 +1,6 @@
 package com.laboratorio.mindsapiinterface.model;
 
-import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
+import com.laboratorio.clientapilibrary.utils.ReaderConfig;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import lombok.Setter;
  * @author Rafael
  * @version 1.0
  * @created 18/09/2024
- * @updated 24/09/2024
+ * @updated 09/05/2025
  */
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
@@ -106,7 +106,7 @@ public class MindsAccount {
     }
     
     public boolean isFuenteSeguidores() {
-        MindsApiConfig config = MindsApiConfig.getInstance();
+        ReaderConfig config = new ReaderConfig("config//minds_api.properties");
         int umbral = Integer.parseInt(config.getProperty("umbral_fuente_seguidores"));
         return this.subscribers_count >= umbral;
     }

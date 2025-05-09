@@ -1,7 +1,7 @@
 package com.laboratorio.utils;
 
+import com.laboratorio.clientapilibrary.utils.ReaderConfig;
 import com.laboratorio.mindsapiinterface.model.MindsSession;
-import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
 import com.laboratorio.mindsapiinterface.utils.MindsSessionManager;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Rafael
  * @version 1.0
  * @created 19/09/2024
- * @updated 19/09/2024
+ * @updated 09/05/2025
  */
 public class MindsSessionManagerTest {
     /* @Test
@@ -25,7 +25,8 @@ public class MindsSessionManagerTest {
     
     @Test
     public void loadSession() throws Exception {
-        String sessionFilePath = MindsApiConfig.getInstance().getProperty("minds_session_file");
+        ReaderConfig config = new ReaderConfig("config//minds_api.properties");
+        String sessionFilePath = config.getProperty("minds_session_file");
         MindsSession session = MindsSessionManager.loadSession(sessionFilePath);
         
         assertTrue(session != null);

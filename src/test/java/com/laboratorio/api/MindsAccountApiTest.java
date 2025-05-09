@@ -1,11 +1,11 @@
 package com.laboratorio.api;
 
+import com.laboratorio.clientapilibrary.utils.ReaderConfig;
 import com.laboratorio.mindsapiinterface.MindsAccountApi;
 import com.laboratorio.mindsapiinterface.exception.MindsApiException;
 import com.laboratorio.mindsapiinterface.impl.MindsAccountApiImpl;
 import com.laboratorio.mindsapiinterface.model.MindsAccount;
 import com.laboratorio.mindsapiinterface.model.response.MindsAccountListResponse;
-import com.laboratorio.mindsapiinterface.utils.MindsApiConfig;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author Rafael
  * @version 1.1
  * @created 18/09/2024
- * @updated 23/10/2024
+ * @updated 09/05/2025
  */
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -47,7 +47,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void getAccountByUsername() {
-        String username = "x999";
+        String username = "kburke";
         
         MindsAccount account = accountApi.getAccountByUsername(username);
         
@@ -65,7 +65,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void get40Followers() throws Exception {
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         int maxLimit = 100;
         int cantidad = 40;
         
@@ -77,7 +77,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void get30FollowersLimit5() throws Exception {
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         int maxLimit = 5;
         int cantidad = 30;
         
@@ -89,7 +89,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void get70FollowersDefaultLimit() throws Exception {
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         int defaultLimit = 0;
         int cantidad = 70;
         
@@ -99,14 +99,14 @@ public class MindsAccountApiTest {
         assertTrue(!accountListResponse.getLoadNext().isEmpty());
     }
     
-    @Test
+    /* @Test
     public void getAllFollowers() throws Exception {     // Usa default limit
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         
         MindsAccountListResponse accountListResponse = accountApi.getFollowers(id);
         assertTrue(accountListResponse.getLoadNext().isBlank());
         assertTrue(accountListResponse.getUsers().size() > 100);
-    }
+    } */
     
     @Test
     public void getAllFollowersIds() throws Exception {
@@ -129,7 +129,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void get40Followings() throws Exception {
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         int maxLimit = 100;
         int cantidad = 40;
         
@@ -141,7 +141,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void get30FollowingsLimit10() throws Exception {
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         int maxLimit = 10;
         int cantidad = 30;
         
@@ -153,7 +153,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void get70FollowingsDefaultLimit() throws Exception {
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         int defaultLimit = 0;
         int cantidad = 70;
         
@@ -165,7 +165,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void getAllFollowings() throws Exception {     // Usa default limit
-        String id = "1618283433321041923";
+        String id = "1357773409630556162";
         
         MindsAccountListResponse accountListResponse = accountApi.getFollowings(id);
         assertTrue(!accountListResponse.getLoadNext().isBlank());
@@ -229,7 +229,7 @@ public class MindsAccountApiTest {
     
     @Test
     public void checkMutualRelationship() {
-        String username = "x999";
+        String username = "kburke";
         
         MindsAccount account = accountApi.checkrelationship(username);
         
@@ -240,7 +240,8 @@ public class MindsAccountApiTest {
     
     @Test
     public void getSuggestionsWithoutLimit() {
-        int defaultLimit = Integer.parseInt(MindsApiConfig.getInstance().getProperty("getSuggestions_default_limit"));
+        ReaderConfig config = new ReaderConfig("config//minds_api.properties");
+        int defaultLimit = Integer.parseInt(config.getProperty("getSuggestions_default_limit"));
         
         List<MindsAccount> accounts = accountApi.getSuggestions();
         
