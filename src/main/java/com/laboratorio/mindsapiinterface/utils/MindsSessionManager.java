@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
  * @author Rafael
  * @version 1.1
  * @created 19/09/2024
- * @updated 06/10/2024
+ * @updated 06/06/2025
  */
 public class MindsSessionManager {
     protected static final Logger log = LogManager.getLogger(MindsSessionManager.class);
@@ -39,7 +39,7 @@ public class MindsSessionManager {
         List<String> setCookies = response.getHttpHeaders().get("Set-Cookie");
         log.info("Número de cookies encontradas: " + setCookies.size());
         if (setCookies == null) {
-            throw new MindsApiException(MindsSessionManager.class.getName(), "No se encontraron las cookies esperadas en la respuesta HTTP");
+            throw new MindsApiException("No se encontraron las cookies esperadas en la respuesta HTTP");
         }
 
         StringBuilder cookies = null;
@@ -60,7 +60,7 @@ public class MindsSessionManager {
         }
         
         if (token == null) {
-            throw new MindsApiException(MindsSessionManager.class.getName(), "No se encontró el token en la respuesta HTTP");
+            throw new MindsApiException("No se encontró el token en la respuesta HTTP");
         }
         
         log.debug("La información de la sessión de Minds se extrajo correctamente");

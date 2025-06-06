@@ -1,6 +1,5 @@
 package com.laboratorio.mindsapiinterface.impl;
 
-import com.google.gson.JsonSyntaxException;
 import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
 import com.laboratorio.clientapilibrary.model.ApiResponse;
@@ -20,26 +19,22 @@ import java.util.stream.Collectors;
 /**
  *
  * @author Rafael
- * @version 1.2
+ * @version 1.3
  * @created 18/09/2024
- * @updated 09/05/2025
+ * @updated 06/06/2025
  */
 public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi {
     public MindsAccountApiImpl() throws Exception {
     }
     
     @Override
-    public List<MindsAccount> getAccountsById(List<String> usersId) throws Exception {
-        try {
-            MindsUsersDetailResponse mindsUsersDetailResponse = this.getUsersDetail(usersId);
-            if (!mindsUsersDetailResponse.getStatus().equals("success")) {
-                throw new MindsApiException(MindsBaseApi.class.getName(), "Error, consultando los detalles de una lista de entidades.");
-            }
-            
-            return mindsUsersDetailResponse.getEntities();
-        } catch (Exception e) {
-            throw e;
+    public List<MindsAccount> getAccountsById(List<String> usersId) {
+        MindsUsersDetailResponse mindsUsersDetailResponse = this.getUsersDetail(usersId);
+        if (!mindsUsersDetailResponse.getStatus().equals("success")) {
+            throw new MindsApiException("Error, consultando los detalles de una lista de entidades.");
         }
+
+        return mindsUsersDetailResponse.getEntities();
     }
     
     @Override
@@ -54,18 +49,18 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             request = this.addContentHeader(request);
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response getAccountByUsername: {}", response.getResponseStr());
             
             MindsGetAccountResponse mindsGetAccountResponse =  this.gson.fromJson(response.getResponseStr(), MindsGetAccountResponse.class);
             if (!mindsGetAccountResponse.getStatus().equals("success")) {
-                throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error buscando al usuario " + username);
+                throw new MindsApiException("Se ha producido un error buscando al usuario " + username);
             }
             
             return mindsGetAccountResponse.getChannel();
-        } catch (JsonSyntaxException e) {
-            logException(e);
+        } catch (MindsApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsAccountApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error recuperando los datos del usuario Minds con username: " + username, e);
         }
     }   
 
@@ -163,6 +158,7 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response followAccount: {}", response.getResponseStr());
             MindsActionResponse mindsActionResponse = this.gson.fromJson(response.getResponseStr(), MindsActionResponse.class);
             if (!mindsActionResponse.getStatus().equals("success")) {
                 log.error("Ha ocurrido un error intentando seguir el usuario con id: " + id);
@@ -170,11 +166,8 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             }
             
             return true;
-        } catch (JsonSyntaxException e) {
-            logException(e);
-            throw  e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsAccountApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error siguiendo la cuenta Minds con id: " + id, e);
         }
     }
 
@@ -192,6 +185,7 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response unfollowAccount: {}", response.getResponseStr());
             MindsActionResponse actionResponse = this.gson.fromJson(response.getResponseStr(), MindsActionResponse.class);
             if (!actionResponse.getStatus().equals("success")) {
                 log.error("Ha ocurrido un error intentando dejar de seguir al usuario con id: " + id);
@@ -199,11 +193,8 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             }
             
             return true;
-        } catch (JsonSyntaxException e) {
-            logException(e);
-            throw  e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsAccountApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error dejando de seguir la cuenta Minds con id: " + id, e);
         }
     }
 
@@ -221,18 +212,18 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response checkrelationship: {}", response.getResponseStr());
             
             MindsGetAccountResponse getAccountResponse =  this.gson.fromJson(response.getResponseStr(), MindsGetAccountResponse.class);
             if (!getAccountResponse.getStatus().equals("success")) {
-                throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error buscando al usuario " + username);
+                throw new MindsApiException("Se ha producido un error buscando al usuario " + username);
             }
             
             return getAccountResponse.getChannel();
-        } catch (JsonSyntaxException e) {
-            logException(e);
+        } catch (MindsApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsAccountApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error compronando la relación con la cuenta Minds con username: " + username, e);
         }
     }
 
@@ -263,15 +254,13 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response getSuggestions: {}", response.getResponseStr());
             
             MindsSuggestionsResponse suggestionsResponse =  this.gson.fromJson(response.getResponseStr(), MindsSuggestionsResponse.class);
             
             return suggestionsResponse.getUsers();
-        } catch (JsonSyntaxException e) {
-            logException(e);
-            throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsAccountApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error recuperando las sugerencias de seguimiento en Minds");
         }
     }
 }

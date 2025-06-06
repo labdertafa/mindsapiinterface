@@ -9,10 +9,10 @@ import java.util.List;
  * @author Rafael
  * @version 1.1
  * @created 18/09/2024
- * @updated 22/10/2024
+ * @updated 06/06/2025
  */
 public interface MindsAccountApi {
-    List<MindsAccount> getAccountsById(List<String> usersId) throws Exception;
+    List<MindsAccount> getAccountsById(List<String> usersId);
     MindsAccount getAccountByUsername(String username);
     
     MindsAccountListResponse getFollowers(String id) throws Exception;

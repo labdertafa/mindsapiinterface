@@ -1,6 +1,5 @@
 package com.laboratorio.mindsapiinterface.impl;
 
-import com.google.gson.JsonSyntaxException;
 import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
 import com.laboratorio.clientapilibrary.model.ApiResponse;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
  * @author Rafael
  * @version 1.1
  * @created 23/09/2024
- * @updated 06/10/2024
+ * @updated 06/06/2024
  */
 public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotificationApi {
     public MindsNotificationApiImpl() throws Exception {
@@ -43,18 +42,18 @@ public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotif
             request = this.addSessionHeader(request);
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response getNotificationPage: {}", response.getResponseStr());
             
             MindsNotificationsResponse notificationsResponse = this.gson.fromJson(response.getResponseStr(), MindsNotificationsResponse.class);
             if (!notificationsResponse.getStatus().equals("success")) {
-                throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error recuperando una página de notificaciones");
+                throw new MindsApiException("Se ha producido un error recuperando una página de notificaciones");
             }
             
             return notificationsResponse;
-        } catch (JsonSyntaxException e) {
-            logException(e);
+        } catch (MindsApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsNotificationApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error recuperando una página de notificaciones en Minds");
         }
     }
 

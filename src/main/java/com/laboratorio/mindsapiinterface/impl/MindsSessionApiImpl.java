@@ -1,6 +1,5 @@
 package com.laboratorio.mindsapiinterface.impl;
 
-import com.google.gson.JsonSyntaxException;
 import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
 import com.laboratorio.clientapilibrary.model.ApiResponse;
@@ -16,7 +15,7 @@ import com.laboratorio.mindsapiinterface.utils.MindsSessionManager;
  * @author Rafael
  * @version 1.1
  * @created 19/09/2024
- * @updated 06/10/2024
+ * @updated 06/06/2025
  */
 public class MindsSessionApiImpl extends MindsBaseApi implements MindsSessionApi {
     public MindsSessionApiImpl() throws Exception {
@@ -42,7 +41,7 @@ public class MindsSessionApiImpl extends MindsBaseApi implements MindsSessionApi
             log.debug("JSON: " + response.getResponseStr());
             MindsLoginResponse loginResponse = this.gson.fromJson(response.getResponseStr(), MindsLoginResponse.class);
             if (!loginResponse.getStatus().equals("success")) {
-                throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error autenticando al usuario " + username);
+                throw new MindsApiException("Se ha producido un error autenticando al usuario " + username);
             }
             
             MindsSession newSession = MindsSessionManager.getSessionData(this.session.getXVersion(), response);
@@ -51,11 +50,10 @@ public class MindsSessionApiImpl extends MindsBaseApi implements MindsSessionApi
             this.setSession(newSession);
             
             return this.session;
-        } catch (JsonSyntaxException e) {
-            logException(e);
+        } catch (MindsApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsSessionApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error autenticando el usuario en Minds: " + username, e);
         }
     }
 }

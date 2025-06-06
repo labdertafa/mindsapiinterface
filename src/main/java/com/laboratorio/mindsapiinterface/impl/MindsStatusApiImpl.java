@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 /**
  *
  * @author Rafael
- * @version 1.1
+ * @version 1.2
  * @created 20/09/2024
- * @updated 15/10/2024
+ * @updated 06/06/2025
  */
 public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     public MindsStatusApiImpl() throws Exception {
@@ -44,13 +44,11 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response postStatus: {}", response.getResponseStr());
             
             return this.gson.fromJson(response.getResponseStr(), MindsStatus.class);
-        } catch (JsonSyntaxException e) {
-            logException(e);
-            throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsStatusApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error posteando un estado en Minds: " + text, e);
         }
     }
 
@@ -77,13 +75,13 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response postStatus con imagen: {}", response.getResponseStr());
             
             return this.gson.fromJson(response.getResponseStr(), MindsStatus.class);
-        } catch (JsonSyntaxException e) {
-            logException(e);
+        } catch (MindsApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsStatusApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error posteando un estado con imagen en Minds: " + text, e);
         }
     }
 
@@ -104,20 +102,20 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addFileFormData("file", filePath);
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response uploadImage: {}", response.getResponseStr());
             
             MindsUploadFileResponse uploadFileResponse = this.gson.fromJson(response.getResponseStr(), MindsUploadFileResponse.class);
             
             if (!uploadFileResponse.getStatus().equals("success")) {
                 log.error("Error: " + response.getResponseStr());
-                throw new MindsApiException(MindsAccountApiImpl.class.getName(), "Se ha producido un error subiendo un archivo al servidor Minds: " + filePath);
+                throw new MindsApiException("Se ha producido un error subiendo un archivo al servidor Minds: " + filePath);
             }
             
             return uploadFileResponse;
-        } catch (JsonSyntaxException e) {
-            logException(e);
+        } catch (MindsApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsStatusApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error subiendo una imagen a Minds: " + filePath, e);
         }
     }
 
@@ -138,7 +136,7 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             
             return true;
         } catch (Exception e) {
-            throw new MindsApiException(MindsStatusApiImpl.class.getName(), e.getMessage());
+            throw new MindsApiException("Error eliminado el post de Minds con id: " + id, e);
         }
     }
 
@@ -161,13 +159,11 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response getUserActivity: {}", response.getResponseStr());
             
             return this.gson.fromJson(response.getResponseStr(), MindsUserActivityResponse.class);
-        } catch (JsonSyntaxException e) {
-            logException(e);
-            throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsApiException.class.getName(), e.getMessage());
+            throw new MindsApiException("Error recuperando la actividad del usuario Minds con id: " + userId, e);
         }
     }
     
@@ -189,13 +185,11 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiHeader("Referer", "https://www.minds.com");
             
             ApiResponse response = this.client.executeApiRequest(request);
+            log.debug("Response getTimelinePage: {}", response.getResponseStr());
                         
             return this.gson.fromJson(response.getResponseStr(), MindsActivityResponse.class);
-        } catch (JsonSyntaxException e) {
-            logException(e);
-            throw e;
         } catch (Exception e) {
-            throw new MindsApiException(MindsApiException.class.getName(), e.getMessage());
+            throw new MindsApiException("Error recuperando una página del timeline de Minds", e);
         }
     }
 
