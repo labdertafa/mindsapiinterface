@@ -13,12 +13,13 @@ import com.laboratorio.mindsapiinterface.utils.MindsSessionManager;
 /**
  *
  * @author Rafael
- * @version 1.1
+ * @version 1.2
  * @created 19/09/2024
- * @updated 06/06/2025
+ * @updated 17/12/2025
  */
 public class MindsSessionApiImpl extends MindsBaseApi implements MindsSessionApi {
     public MindsSessionApiImpl() throws Exception {
+        super();
     }
 
     @Override
@@ -34,8 +35,8 @@ public class MindsSessionApiImpl extends MindsBaseApi implements MindsSessionApi
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.POST, requestJson);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com/login");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, "https://www.minds.com/login");
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("JSON: " + response.getResponseStr());

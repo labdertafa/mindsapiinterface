@@ -14,12 +14,15 @@ import org.apache.logging.log4j.Logger;
 /**
  *
  * @author Rafael
- * @version 1.1
+ * @version 1.2
  * @created 19/09/2024
- * @updated 06/06/2025
+ * @updated 17/12/2025
  */
 public class MindsSessionManager {
     protected static final Logger log = LogManager.getLogger(MindsSessionManager.class);
+
+    private MindsSessionManager() {
+    }
 
     private static void logException(Exception e) {
         log.error("Error: " + e.getMessage());
@@ -69,15 +72,10 @@ public class MindsSessionManager {
     }
     
     public static MindsSession loadSession(String filePath) throws Exception {
-        try {
-            FileInputStream fis = new FileInputStream(filePath);
-            ObjectInputStream ois = new ObjectInputStream(fis);
+        try (FileInputStream fis = new FileInputStream(filePath);
+          ObjectInputStream ois = new ObjectInputStream(fis)) {
             MindsSession session = (MindsSession)ois.readObject();
-            ois.close();
-            fis.close();
-            
             log.debug("La información de la sessión de Minds se recuperó correctamente");
-            
             return session;
         } catch (Exception e) {
             log.error("Error recuperando la información de la session de Minds");
@@ -87,13 +85,10 @@ public class MindsSessionManager {
     }
     
     public static void saveSession(String filePath, MindsSession session) throws Exception {
-        try {
-            FileOutputStream fos = new FileOutputStream(filePath);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+        try (FileOutputStream fos = new FileOutputStream(filePath);
+            ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
             oos.writeObject(session);
-            oos.close();
-            fos.close();
-            
             log.debug("La información de la sessión de Minds se almacenó correctamente");
         } catch (Exception e) {
             log.error("Error almacenando la información de la session de Minds");

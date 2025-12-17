@@ -13,12 +13,13 @@ import java.util.stream.Collectors;
 /**
  *
  * @author Rafael
- * @version 1.1
+ * @version 1.2
  * @created 23/09/2024
- * @updated 06/06/2024
+ * @updated 17/12/2024
  */
 public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotificationApi {
     public MindsNotificationApiImpl() throws Exception {
+        super();
     }
     
     @Override
@@ -45,7 +46,7 @@ public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotif
             log.debug("Response getNotificationPage: {}", response.getResponseStr());
             
             MindsNotificationsResponse notificationsResponse = this.gson.fromJson(response.getResponseStr(), MindsNotificationsResponse.class);
-            if (!notificationsResponse.getStatus().equals("success")) {
+            if (!notificationsResponse.getStatus().equals(SUCCESS)) {
                 throw new MindsApiException("Se ha producido un error recuperando una página de notificaciones");
             }
             
@@ -55,6 +56,30 @@ public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotif
         } catch (Exception e) {
             throw new MindsApiException("Error recuperando una página de notificaciones en Minds");
         }
+    }
+    
+    private boolean isContinuar(List<MindsNotification> notifications, String cursor,
+            MindsNotificationsResponse notificationsResponse, int usedLimit,String posicionInicial) {
+        log.debug("getFollowers. Recuperados: " + notifications.size() + ". Load next: " + cursor);
+        if ((notificationsResponse.getNotifications() == null) ||(notificationsResponse.getNotifications().isEmpty())) {
+            return false;
+        } else {
+            if ((notificationsResponse.getNotifications().size() < usedLimit) || (cursor == null)) {
+                return false;
+            }
+
+            if (posicionInicial != null) {
+                List<MindsNotification> list = notificationsResponse.getNotifications();
+                for (int i = list.size() - 1; i >= 0; i--) {
+                    long notiftime = list.get(i).getCreated_timestamp();
+                    if (notiftime < Long.parseLong(posicionInicial)) {
+                        return false;
+                    }
+                }
+            }
+        }
+            
+        return true;
     }
 
     @Override
@@ -72,53 +97,31 @@ public class MindsNotificationApiImpl extends MindsBaseApi implements MindsNotif
         String cursor = "";
         String nuevaPosicionInicial = posicionInicial;
         
-        try {
-            do {
-                MindsNotificationsResponse notificationsResponse = this.getNotificationPage(endpoint, usedLimit, okStatus, cursor);
-                if (notifications == null) {
-                    notifications = notificationsResponse.getNotifications();
-                    if (!notifications.isEmpty()) {
-                        nuevaPosicionInicial = Long.toString(notifications.get(0).getCreated_timestamp());
-                    }
-                } else {
-                    if (notificationsResponse.getNotifications() != null) {
-                        notifications.addAll(notificationsResponse.getNotifications());
-                    }
+        do {
+            MindsNotificationsResponse notificationsResponse = this.getNotificationPage(endpoint, usedLimit, okStatus, cursor);
+            if (notifications == null) {
+                notifications = notificationsResponse.getNotifications();
+                if (!notifications.isEmpty()) {
+                    nuevaPosicionInicial = Long.toString(notifications.get(0).getCreated_timestamp());
                 }
-                
-                cursor = notificationsResponse.getLoadNext();
-                log.debug("getFollowers. Recuperados: " + notifications.size() + ". Load next: " + cursor);
-                if ((notificationsResponse.getNotifications() == null) ||(notificationsResponse.getNotifications().isEmpty())) {
-                    continuar = false;
-                } else {
-                    if ((notificationsResponse.getNotifications().size() < usedLimit) || (cursor == null)) {
-                        continuar = false;
-                    }
-                    
-                    if (posicionInicial != null) {
-                        List<MindsNotification> list = notificationsResponse.getNotifications();
-                        for (int i = list.size() - 1; i >= 0; i--) {
-                            long notiftime = list.get(i).getCreated_timestamp();
-                            if (notiftime < Long.parseLong(posicionInicial)) {
-                                continuar = false;
-                                break;
-                            }
-                        }
-                    }
+            } else {
+                if (notificationsResponse.getNotifications() != null) {
+                    notifications.addAll(notificationsResponse.getNotifications());
                 }
-            } while (continuar);
-
-            if (posicionInicial == null) {
-                return new MindsNotificationsResponse("success", notifications, nuevaPosicionInicial);
             }
-            
-            List<MindsNotification> filtredNotifications = notifications.stream()
-                    .filter(n -> n.getCreated_timestamp() > Long.parseLong(posicionInicial))
-                    .collect(Collectors.toList());
-            log.debug("filtredNotificationsList size: " + filtredNotifications.size());
-            return new MindsNotificationsResponse("success", filtredNotifications, nuevaPosicionInicial);
-        } catch (Exception e) {
-            throw e;
+
+            cursor = notificationsResponse.getLoadNext();
+            continuar = this.isContinuar(notifications, cursor, notificationsResponse, usedLimit, posicionInicial);
+        } while (continuar);
+
+        if (posicionInicial == null) {
+            return new MindsNotificationsResponse(SUCCESS, notifications, nuevaPosicionInicial);
         }
+
+        List<MindsNotification> filtredNotifications = notifications.stream()
+                .filter(n -> n.getCreated_timestamp() > Long.parseLong(posicionInicial))
+                .collect(Collectors.toList());
+        log.debug("filtredNotificationsList size: " + filtredNotifications.size());
+        return new MindsNotificationsResponse(SUCCESS, filtredNotifications, nuevaPosicionInicial);
     }
 }

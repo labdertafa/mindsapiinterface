@@ -1,6 +1,5 @@
 package com.laboratorio.mindsapiinterface.impl;
 
-import com.google.gson.JsonSyntaxException;
 import com.laboratorio.clientapilibrary.model.ApiMethodType;
 import com.laboratorio.clientapilibrary.model.ApiRequest;
 import com.laboratorio.clientapilibrary.model.ApiResponse;
@@ -19,12 +18,13 @@ import java.util.stream.Collectors;
 /**
  *
  * @author Rafael
- * @version 1.2
+ * @version 1.3
  * @created 20/09/2024
- * @updated 06/06/2025
+ * @updated 17/12/2025
  */
 public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
     public MindsStatusApiImpl() throws Exception {
+        super();
     }
     
     @Override
@@ -40,8 +40,8 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.PUT, requestJson);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response postStatus: {}", response.getResponseStr());
@@ -71,8 +71,8 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.PUT, requestJson);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response postStatus con imagen: {}", response.getResponseStr());
@@ -97,8 +97,8 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiHeader("Accept", "application/json, text/plain, */*");
             request.addApiHeader("Accept-Encoding", "gzip, deflate, br, zstd");
             request.addApiHeader("Connection", "keep-alive");
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com/newsfeed/subscriptions/for-you");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, "https://www.minds.com/newsfeed/subscriptions/for-you");
             request.addFileFormData("file", filePath);
             
             ApiResponse response = this.client.executeApiRequest(request);
@@ -129,8 +129,8 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.DELETE);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             this.client.executeApiRequest(request);
             
@@ -155,8 +155,8 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             request.addApiPathParam("limit", Integer.toString(usedLimit));
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response getUserActivity: {}", response.getResponseStr());
@@ -181,8 +181,8 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.POST, requestJson);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response getTimelinePage: {}", response.getResponseStr());
@@ -203,42 +203,37 @@ public class MindsStatusApiImpl extends MindsBaseApi implements MindsStatusApi {
         
         List<MindsStatus> statuses = null;
         boolean continuar = true;
-        String cursor = null;
-        
-        try {
-            String uri = endpoint;
-            
-            do {
-                MindsActivityResponse mindsActivityResponse = this.getTimelinePage(uri, okStatus, limit, algorithm, query, cursor);
-                List<MindsActivityEdge> results = mindsActivityResponse.getData().getNewsfeed().getEdges();
-                log.debug("Elementos recuperados total: " + results.size());
-                List<MindsStatus> filteredResults = results.stream()
-                        .filter(edge -> edge.get__typename().equals("ActivityEdge"))
-                        .map(edge -> this.gson.fromJson(edge.getNode().getLegacy(), MindsStatus.class))
-                        .collect(Collectors.toList());
-                log.debug("Elementos recuperados filtrados: " + filteredResults.size());
-                
-                
-                if (statuses == null) {
-                    statuses = filteredResults;
-                } else {
-                    statuses.addAll(filteredResults);
-                }
-                
-                cursor = mindsActivityResponse.getData().getNewsfeed().getPageInfo().getEndCursor();
-                log.debug("getGlobalTimeline. Recuperados: " + statuses.size() + ". Cursor: " + cursor);
-                if (filteredResults.isEmpty()) {
+        String cursor = null;        
+        String uri = endpoint;
+
+        do {
+            MindsActivityResponse mindsActivityResponse = this.getTimelinePage(uri, okStatus, limit, algorithm, query, cursor);
+            List<MindsActivityEdge> results = mindsActivityResponse.getData().getNewsfeed().getEdges();
+            log.debug("Elementos recuperados total: " + results.size());
+            List<MindsStatus> filteredResults = results.stream()
+                    .filter(edge -> edge.get__typename().equals("ActivityEdge"))
+                    .map(edge -> this.gson.fromJson(edge.getNode().getLegacy(), MindsStatus.class))
+                    .collect(Collectors.toList());
+            log.debug("Elementos recuperados filtrados: " + filteredResults.size());
+
+
+            if (statuses == null) {
+                statuses = filteredResults;
+            } else {
+                statuses.addAll(filteredResults);
+            }
+
+            cursor = mindsActivityResponse.getData().getNewsfeed().getPageInfo().getEndCursor();
+            log.debug("getGlobalTimeline. Recuperados: " + statuses.size() + ". Cursor: " + cursor);
+            if (filteredResults.isEmpty()) {
+                continuar = false;
+            } else {
+                if ((cursor == null) || (statuses.size() >= quantity)) {
                     continuar = false;
-                } else {
-                    if ((cursor == null) || (statuses.size() >= quantity)) {
-                        continuar = false;
-                    }
                 }
-            } while (continuar);
-            
-            return statuses.subList(0, Math.min(quantity, statuses.size()));
-        } catch (Exception e) {
-            throw e;
-        }
+            }
+        } while (continuar);
+
+        return statuses.subList(0, Math.min(quantity, statuses.size()));
     }
 }

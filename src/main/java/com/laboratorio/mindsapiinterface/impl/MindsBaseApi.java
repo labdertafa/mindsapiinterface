@@ -23,11 +23,16 @@ import org.apache.logging.log4j.Logger;
 /**
  *
  * @author Rafael
- * @version 1.2
+ * @version 1.3
  * @created 18/09/2024
- * @updated 06/06/2025
+ * @updated 17/12/2025
  */
 public class MindsBaseApi {
+    protected static final String SUCCESS = "success";
+    protected static final String ORIGIN = "Origin";
+    protected static final String REFERER = "Referer";
+    protected static final String MINDS_SITE = "https://www.minds.com";
+    
     protected static final Logger log = LogManager.getLogger(MindsBaseApi.class);
     protected final ApiClient client;
     protected MindsSession session;
@@ -42,8 +47,17 @@ public class MindsBaseApi {
         this.apiConfig = new ReaderConfig("config//minds_api.properties");
         String sessionFilePath = this.apiConfig.getProperty("minds_session_file");
         this.session = MindsSessionManager.loadSession(sessionFilePath);
-        this.client = new ApiClient();
         this.gson = new Gson();
+        String proxyHost = this.apiConfig.getProperty("minds_proxy_host");
+        String proxyPortStr = this.apiConfig.getProperty("minds_proxy_port");
+        String certificatePath = this.apiConfig.getProperty("minds_proxy_certificate");
+        if (proxyHost != null && !proxyHost.isBlank() && proxyPortStr != null && !proxyPortStr.isBlank()
+                && certificatePath != null && !certificatePath.isBlank()) {
+            int proxyPort = Integer.parseInt(proxyPortStr);
+            this.client = new ApiClient(proxyHost, proxyPort, certificatePath);
+        } else {
+            this.client = new ApiClient();
+        }
     }
     
     protected ApiRequest addSessionHeader(ApiRequest request) {
@@ -82,13 +96,29 @@ public class MindsBaseApi {
         }
     }
     
+    boolean isContinuarGetAccountList(int quantity, List<MindsAccount> accounts, String maxId,
+            MindsAccountListResponse accountListResponse, int limit) {
+        log.debug("getSubscribersList. Cantidad: " + quantity + ". Recuperados: " + accounts.size() + ". Max_id: " + maxId);
+        if (quantity > 0) {
+            if ((accounts.size() >= quantity) || (maxId.isBlank())) {
+                return false;
+            }
+        } else {
+            if ((maxId.isBlank()) || (accountListResponse.getUsers().size() < limit)) {
+                return false;
+            }
+        }
+            
+        return true;
+    }
+    
     // Función que obtiene los seguidores de una cuenta
     protected MindsEntityListResponse getAccountList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) {
         List<MindsAccount> accounts = null;
         boolean continuar = true;
         int limit = instruccionInfo.getLimit();
         int okStatus = instruccionInfo.getOkStatus();
-        String max_id = posicionInicial;
+        String maxId = posicionInicial;
         
         if (quantity > 0) {
             limit = Math.min(limit, quantity);
@@ -96,44 +126,31 @@ public class MindsBaseApi {
         
         String uri = instruccionInfo.getEndpoint() + "/" + userId;
         
-        try {
-            do {
-                String jsonStr = this.getAccountPage(uri, okStatus, limit, max_id);
-                MindsAccountListResponse accountListResponse = this.gson.fromJson(jsonStr, MindsAccountListResponse.class);
-                if (!accountListResponse.getStatus().equals("success")) {
-                    throw new MindsApiException("Se ha producido un error recuperando una página de cuentas");
-                }
-                if (accounts == null) {
-                    accounts = accountListResponse.getUsers();
-                } else {
-                    accounts.addAll(accountListResponse.getUsers());
-                }
-                
-                max_id = accountListResponse.getLoadNext();
-                log.debug("getSubscribersList. Cantidad: " + quantity + ". Recuperados: " + accounts.size() + ". Max_id: " + max_id);
-                if (quantity > 0) {
-                    if ((accounts.size() >= quantity) || (max_id.isBlank())) {
-                        continuar = false;
-                    }
-                } else {
-                    if ((max_id.isBlank()) || (accountListResponse.getUsers().size() < limit)) {
-                        continuar = false;
-                    }
-                }
-            } while (continuar);
-            
-            List<MindsEntity> entities = accounts.stream()
-                    .map(ac -> new MindsEntity(ac.getGuid(), ac.getGuid(), Long.parseLong(ac.getTime_created()), ac.getUrn(), null))
-                    .collect(Collectors.toList());
-
-            if (quantity == 0) {
-                return new MindsEntityListResponse("success", entities, max_id);
+        do {
+            String jsonStr = this.getAccountPage(uri, okStatus, limit, maxId);
+            MindsAccountListResponse accountListResponse = this.gson.fromJson(jsonStr, MindsAccountListResponse.class);
+            if (!accountListResponse.getStatus().equals(SUCCESS)) {
+                throw new MindsApiException("Se ha producido un error recuperando una página de cuentas");
             }
-            
-            return new MindsEntityListResponse("success", entities.subList(0, Math.min(quantity, entities.size())), max_id);
-        } catch (Exception e) {
-            throw e;
+            if (accounts == null) {
+                accounts = accountListResponse.getUsers();
+            } else {
+                accounts.addAll(accountListResponse.getUsers());
+            }
+
+            maxId = accountListResponse.getLoadNext();
+            continuar = this.isContinuarGetAccountList(quantity, accounts, maxId, accountListResponse, limit);
+        } while (continuar);
+
+        List<MindsEntity> entities = accounts.stream()
+                .map(ac -> new MindsEntity(ac.getGuid(), ac.getGuid(), Long.parseLong(ac.getTime_created()), ac.getUrn(), null))
+                .collect(Collectors.toList());
+
+        if (quantity == 0) {
+            return new MindsEntityListResponse(SUCCESS, entities, maxId);
         }
+
+        return new MindsEntityListResponse(SUCCESS, entities.subList(0, Math.min(quantity, entities.size())), maxId);
     }
     
     private MindsAccountListResponse getEntitiesDetails(MindsEntityListResponse entityListResponse) {
@@ -152,7 +169,7 @@ public class MindsBaseApi {
 
             // Procesar el bloque actual
             MindsUsersDetailResponse usersDetailResponse = this.getUsersDetail(usersId);
-            if (!usersDetailResponse.getStatus().equals("success")) {
+            if (!usersDetailResponse.getStatus().equals(SUCCESS)) {
                 throw new MindsApiException("Error, consultando los detalles de una lista de entidades. Respuesta inesperada.");
             }
 
@@ -164,7 +181,7 @@ public class MindsBaseApi {
             log.debug("getSubscriptionsList. Recuperados: " + usersDetailResponse.getEntities().size() + ". Total: " + accounts.size());
         }
         
-        return new MindsAccountListResponse("success", accounts, entityListResponse.getLoadNext());
+        return new MindsAccountListResponse(SUCCESS, accounts, entityListResponse.getLoadNext());
     }
     
     protected MindsAccountListResponse getSubscribersList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) {
@@ -213,6 +230,22 @@ public class MindsBaseApi {
         }
     }
     
+    private boolean isContinuarGetEntityList(int quantity, List<MindsEntity> entities, String maxId,
+            MindsEntityListResponse entityListResponse, int limit) {
+        log.debug("getAccountList. Cantidad: " + quantity + ". Recuperados: " + entities.size() + ". Max_id: " + maxId);
+        if (quantity > 0) {
+            if ((entities.size() >= quantity) || (maxId.isBlank())) {
+                return false;
+            }
+        } else {
+            if ((maxId.isBlank()) || (entityListResponse.getEntities().size() < limit)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
     // Función que obtiene los seguidos por una cuenta
     protected MindsEntityListResponse getEntityList(InstruccionInfo instruccionInfo, String userId, int quantity, String posicionInicial) {
         List<MindsEntity> entities = null;
@@ -220,7 +253,7 @@ public class MindsBaseApi {
         boolean sumar;
         int limit = instruccionInfo.getLimit();
         int okStatus = instruccionInfo.getOkStatus();
-        String max_id = posicionInicial;
+        String maxId = posicionInicial;
         
         if (quantity > 0) {
             limit = Math.min(limit, quantity);
@@ -228,47 +261,34 @@ public class MindsBaseApi {
         
         String uri = instruccionInfo.getEndpoint() + "/" + userId + "/" + instruccionInfo.getComplementoUrl();
         
-        try {
-            do {
-                String jsonStr = this.getAccountPage(uri, okStatus, limit, max_id);
-                MindsEntityListResponse entityListResponse = this.gson.fromJson(jsonStr, MindsEntityListResponse.class);
-                if (!entityListResponse.getStatus().equals("success")) {
-                    throw new MindsApiException("Se ha producido un error recuperando una página de entidades");
-                }
-                if (entities == null) {
-                    entities = entityListResponse.getEntities();
-                    sumar = true;
-                } else {
-                    entities.addAll(entityListResponse.getEntities());
-                    sumar = false;
-                }
-                
-                max_id = entityListResponse.getLoadNext();
-                log.debug("getAccountList. Cantidad: " + quantity + ". Recuperados: " + entities.size() + ". Max_id: " + max_id);
-                if (quantity > 0) {
-                    if ((entities.size() >= quantity) || (max_id.isBlank())) {
-                        continuar = false;
-                    }
-                } else {
-                    if ((max_id.isBlank()) || (entityListResponse.getEntities().size() < limit)) {
-                        continuar = false;
-                    }
-                }
-                // Si es la primera búsqueda, se ajusta el max_id
-                if (sumar) {
-                    int valor = Integer.parseInt(max_id) + 1;
-                    max_id = Integer.toString(valor);
-                }
-            } while (continuar);
-
-            if (quantity == 0) {
-                return new MindsEntityListResponse("success", entities, max_id);
+        do {
+            String jsonStr = this.getAccountPage(uri, okStatus, limit, maxId);
+            MindsEntityListResponse entityListResponse = this.gson.fromJson(jsonStr, MindsEntityListResponse.class);
+            if (!entityListResponse.getStatus().equals(SUCCESS)) {
+                throw new MindsApiException("Se ha producido un error recuperando una página de entidades");
             }
-            
-            return new MindsEntityListResponse("success", entities.subList(0, Math.min(quantity, entities.size())), max_id);
-        } catch (Exception e) {
-            throw e;
+            if (entities == null) {
+                entities = entityListResponse.getEntities();
+                sumar = true;
+            } else {
+                entities.addAll(entityListResponse.getEntities());
+                sumar = false;
+            }
+
+            maxId = entityListResponse.getLoadNext();
+            continuar = this.isContinuarGetEntityList(quantity, entities, maxId, entityListResponse, limit);
+            // Si es la primera búsqueda, se ajusta el max_id
+            if (sumar) {
+                int valor = Integer.parseInt(maxId) + 1;
+                maxId = Integer.toString(valor);
+            }
+        } while (continuar);
+
+        if (quantity == 0) {
+            return new MindsEntityListResponse(SUCCESS, entities, maxId);
         }
+
+        return new MindsEntityListResponse(SUCCESS, entities.subList(0, Math.min(quantity, entities.size())), maxId);
     }
     
     // Función que obtiene los seguidos por una cuenta

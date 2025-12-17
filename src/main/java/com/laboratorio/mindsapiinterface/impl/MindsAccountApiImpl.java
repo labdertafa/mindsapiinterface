@@ -19,18 +19,19 @@ import java.util.stream.Collectors;
 /**
  *
  * @author Rafael
- * @version 1.3
+ * @version 1.4
  * @created 18/09/2024
- * @updated 06/06/2025
+ * @updated 17/12/2025
  */
 public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi {
     public MindsAccountApiImpl() throws Exception {
+        super();
     }
     
     @Override
     public List<MindsAccount> getAccountsById(List<String> usersId) {
         MindsUsersDetailResponse mindsUsersDetailResponse = this.getUsersDetail(usersId);
-        if (!mindsUsersDetailResponse.getStatus().equals("success")) {
+        if (!mindsUsersDetailResponse.getStatus().equals(SUCCESS)) {
             throw new MindsApiException("Error, consultando los detalles de una lista de entidades.");
         }
 
@@ -52,7 +53,7 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             log.debug("Response getAccountByUsername: {}", response.getResponseStr());
             
             MindsGetAccountResponse mindsGetAccountResponse =  this.gson.fromJson(response.getResponseStr(), MindsGetAccountResponse.class);
-            if (!mindsGetAccountResponse.getStatus().equals("success")) {
+            if (!mindsGetAccountResponse.getStatus().equals(SUCCESS)) {
                 throw new MindsApiException("Se ha producido un error buscando al usuario " + username);
             }
             
@@ -154,13 +155,13 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.POST);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response followAccount: {}", response.getResponseStr());
             MindsActionResponse mindsActionResponse = this.gson.fromJson(response.getResponseStr(), MindsActionResponse.class);
-            if (!mindsActionResponse.getStatus().equals("success")) {
+            if (!mindsActionResponse.getStatus().equals(SUCCESS)) {
                 log.error("Ha ocurrido un error intentando seguir el usuario con id: " + id);
                 return false;
             }
@@ -181,13 +182,13 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.DELETE);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response unfollowAccount: {}", response.getResponseStr());
             MindsActionResponse actionResponse = this.gson.fromJson(response.getResponseStr(), MindsActionResponse.class);
-            if (!actionResponse.getStatus().equals("success")) {
+            if (!actionResponse.getStatus().equals(SUCCESS)) {
                 log.error("Ha ocurrido un error intentando dejar de seguir al usuario con id: " + id);
                 return false;
             }
@@ -208,14 +209,14 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             ApiRequest request = new ApiRequest(uri, okStatus, ApiMethodType.GET);
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response checkrelationship: {}", response.getResponseStr());
             
             MindsGetAccountResponse getAccountResponse =  this.gson.fromJson(response.getResponseStr(), MindsGetAccountResponse.class);
-            if (!getAccountResponse.getStatus().equals("success")) {
+            if (!getAccountResponse.getStatus().equals(SUCCESS)) {
                 throw new MindsApiException("Se ha producido un error buscando al usuario " + username);
             }
             
@@ -250,8 +251,8 @@ public class MindsAccountApiImpl extends MindsBaseApi implements MindsAccountApi
             request.addApiPathParam("offset", "0");
             request = this.addSessionHeader(request);
             request = this.addContentHeader(request);
-            request.addApiHeader("Origin", "https://www.minds.com");
-            request.addApiHeader("Referer", "https://www.minds.com");
+            request.addApiHeader(ORIGIN, MINDS_SITE);
+            request.addApiHeader(REFERER, MINDS_SITE);
             
             ApiResponse response = this.client.executeApiRequest(request);
             log.debug("Response getSuggestions: {}", response.getResponseStr());

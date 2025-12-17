@@ -3,15 +3,16 @@ package com.laboratorio.mindsapiinterface.exception;
 /**
  *
  * @author Rafael
- * @version 1.1
+ * @version 1.2
  * @created 10/07/2024
- * @updated 06/06/2025
+ * @updated 17/12/2025
  */
 public class MindsApiException extends RuntimeException {
-    private Throwable causaOriginal = null;
+    private final Throwable causaOriginal;
     
     public MindsApiException(String message) {
         super(message);
+        this.causaOriginal = null;
     }
     
     public MindsApiException(String message, Throwable causaOriginal) {
